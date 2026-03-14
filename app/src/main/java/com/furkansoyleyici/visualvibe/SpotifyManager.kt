@@ -13,7 +13,7 @@ class SpotifyManager(private val activity: Activity) {
     private val clientId = BuildConfig.SPOTIFY_CLIENT_ID
     private val redirectUri = "visualvibe://callback"
 
-    fun login() {
+    fun getLoginIntent(): Intent {
         val builder = AuthorizationRequest.Builder(
             clientId,
             AuthorizationResponse.Type.TOKEN,
@@ -23,7 +23,7 @@ class SpotifyManager(private val activity: Activity) {
         builder.setScopes(arrayOf("user-top-read"))
         val request = builder.build()
 
-        AuthorizationClient.openLoginActivity(activity, REQUEST_CODE, request)
+        return AuthorizationClient.createLoginActivityIntent(activity, request)
     }
 
     fun handleLoginResponse(resultCode: Int, intent: Intent?): String? {

@@ -10,19 +10,16 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.ImageSearch
+import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,10 +36,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.furkansoyleyici.visualvibe.GeminiVibeEngine
+import com.furkansoyleyici.visualvibe.utils.NetworkUtils
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainScreen(modifier: Modifier = Modifier) {
+fun MainScreen(
+    modifier: Modifier = Modifier,
+    spotifyData: String?,
+    isSpotifyLoading: Boolean,
+    onLoginClick: () -> Unit
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -50,14 +53,15 @@ fun MainScreen(modifier: Modifier = Modifier) {
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var suggestedSong by remember { mutableStateOf<String?>(null) }
-    var isAnalyzing by remember { mutableStateOf(false) }
+    
+    var uiState by remember { mutableStateOf<VibeUiState>(VibeUiState.Idle) }
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(Color(0xFF0A1A12), Color(0xFF050505))
     )
     val cardBackground = Color(0xFF1E2E26).copy(alpha = 0.7f)
     val accentGreen = Color(0xFF1DB954)
+    val errorRed = Color(0xFFE57373)
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -67,14 +71,22 @@ fun MainScreen(modifier: Modifier = Modifier) {
             val bitmap = uriToBitmap(context, uri)
             selectedBitmap = bitmap
             if (bitmap != null) {
-                isAnalyzing = true
-                suggestedSong = null
+                if (!NetworkUtils.isNetworkAvailable(context)) {
+                    uiState = VibeUiState.Error("İnternet bağlantınızı kontrol edin ve tekrar deneyin.")
+                    return@rememberLauncherForActivityResult
+                }
+                
+                uiState = VibeUiState.Loading
 
                 scope.launch {
-
-                    val result = vibeEngine.analyzeVibe(bitmap, "Kullanıcı verisi henüz yüklenmedi")
-                    suggestedSong = result
-                    isAnalyzing = false
+                    val fallbackData = "Kullanıcı verisi henüz yüklenmedi"
+                    val dataToUse = spotifyData ?: fallbackData
+                    val result = vibeEngine.analyzeVibe(bitmap, dataToUse)
+                    if (result != null) {
+                         uiState = VibeUiState.Success(result)
+                    } else {
+                         uiState = VibeUiState.Error("Analiz sırasında bir hata oluştu veya bağlantı kesildi.")
+                    }
                 }
             }
         }
@@ -90,7 +102,6 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 .fillMaxSize()
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "VisualVibe",
@@ -98,8 +109,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 fontWeight = FontWeight.Black,
                 color = Color.White,
                 letterSpacing = 2.sp,
-                modifier = Modifier.padding(bottom = 24.dp)
+                modifier = Modifier.padding(bottom = 12.dp)
             )
+
+
 
             AnimatedContent(
                 targetState = selectedBitmap != null,
@@ -121,7 +134,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Surface(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().animateContentSize(),
                             color = cardBackground,
                             shape = RoundedCornerShape(24.dp)
                         ) {
@@ -129,19 +142,32 @@ fun MainScreen(modifier: Modifier = Modifier) {
                                 modifier = Modifier.padding(20.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                if (isAnalyzing) {
-                                    CircularProgressIndicator(color = accentGreen)
-                                    Text("Vibe Analiz Ediliyor...", color = Color.White, modifier = Modifier.padding(top = 8.dp))
-                                } else if (suggestedSong != null) {
-                                    Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = accentGreen)
-                                    Text(
-                                        text = suggestedSong!!,
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(top = 12.dp)
-                                    )
+                                when(val state = uiState) {
+                                    is VibeUiState.Idle -> { }
+                                    is VibeUiState.Loading -> {
+                                        CircularProgressIndicator(color = accentGreen)
+                                        Text("Vibe Analiz Ediliyor...", color = Color.White, modifier = Modifier.padding(top = 8.dp))
+                                    }
+                                    is VibeUiState.Success -> {
+                                        Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = accentGreen)
+                                        Text(
+                                            text = state.suggestedSong,
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(top = 12.dp)
+                                        )
+                                    }
+                                    is VibeUiState.Error -> {
+                                        Icon(Icons.Rounded.ErrorOutline, contentDescription = null, tint = errorRed)
+                                        Text(
+                                            text = state.message,
+                                            color = errorRed,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(top = 8.dp)
+                                        )
+                                    }
                                 }
                             }
                         }

@@ -69,8 +69,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    // Spotify Auth SDK
     implementation("com.spotify.android:auth:2.1.0")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
