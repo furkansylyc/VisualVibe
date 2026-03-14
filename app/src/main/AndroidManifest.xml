@@ -12,7 +12,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.VisualVibe">
+        android:theme="@style/Theme.VisualVibe"
+        tools:replace="android:fullBackupContent">
 
         <activity
             android:name=".MainActivity"
@@ -29,10 +30,14 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
-                    android:host="callback"
-                    android:scheme="visualvibe" />
+                    android:host="${redirectHostName}"
+                    android:scheme="${redirectSchemeName}"
+                    tools:node="replace" />
             </intent-filter>
+
         </activity>
     </application>
+
 </manifest>

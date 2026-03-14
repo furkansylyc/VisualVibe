@@ -1,5 +1,6 @@
 package com.furkansoyleyici.visualvibe
 
+import com.furkansoyleyici.visualvibe.BuildConfig
 import android.graphics.Bitmap
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content

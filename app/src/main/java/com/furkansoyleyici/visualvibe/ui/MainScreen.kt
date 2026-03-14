@@ -38,19 +38,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.furkansoyleyici.visualvibe.ImageAnalyzer
+import com.furkansoyleyici.visualvibe.GeminiVibeEngine
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val imageAnalyzer = remember { ImageAnalyzer() }
+    val scope = rememberCoroutineScope()
+
+    val vibeEngine = remember { GeminiVibeEngine() }
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var recognizedLabels by remember { mutableStateOf<List<String>>(emptyList()) }
+    var suggestedSong by remember { mutableStateOf<String?>(null) }
     var isAnalyzing by remember { mutableStateOf(false) }
-
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(Color(0xFF0A1A12), Color(0xFF050505))
@@ -67,9 +68,12 @@ fun MainScreen(modifier: Modifier = Modifier) {
             selectedBitmap = bitmap
             if (bitmap != null) {
                 isAnalyzing = true
-                recognizedLabels = emptyList()
-                imageAnalyzer.AnalyzePhoto(bitmap) { labels ->
-                    recognizedLabels = labels
+                suggestedSong = null
+
+                scope.launch {
+
+                    val result = vibeEngine.analyzeVibe(bitmap, "Kullanıcı verisi henüz yüklenmedi")
+                    suggestedSong = result
                     isAnalyzing = false
                 }
             }
@@ -88,7 +92,6 @@ fun MainScreen(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-
             Text(
                 text = "VisualVibe",
                 fontSize = 24.sp,
@@ -100,14 +103,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
 
             AnimatedContent(
                 targetState = selectedBitmap != null,
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(500)) togetherWith fadeOut(
-                        animationSpec = tween(
-                            500
-                        )
-                    )
-                },
-                label = "ImageStateAnimation"
+                label = "ImageState"
             ) { hasImage ->
                 if (hasImage) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -118,11 +114,6 @@ fun MainScreen(modifier: Modifier = Modifier) {
                                 .fillMaxWidth()
                                 .height(320.dp)
                                 .shadow(24.dp, RoundedCornerShape(24.dp))
-                                .border(
-                                    1.dp,
-                                    Color.White.copy(alpha = 0.1f),
-                                    RoundedCornerShape(24.dp)
-                                )
                                 .clip(RoundedCornerShape(24.dp)),
                             contentScale = ContentScale.Crop
                         )
@@ -130,103 +121,27 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .shadow(16.dp, RoundedCornerShape(24.dp)),
+                            modifier = Modifier.fillMaxWidth(),
                             color = cardBackground,
-                            shape = RoundedCornerShape(24.dp),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+                            shape = RoundedCornerShape(24.dp)
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
+                                modifier = Modifier.padding(20.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                AnimatedVisibility(visible = isAnalyzing) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        CircularProgressIndicator(
-                                            color = accentGreen,
-                                            strokeWidth = 4.dp,
-                                            modifier = Modifier.size(48.dp)
-                                        )
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                        Text(
-                                            text = "Vibe İnceleniyor...",
-                                            color = accentGreen,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
-                                }
-
-                                AnimatedVisibility(visible = !isAnalyzing && recognizedLabels.isNotEmpty()) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.padding(bottom = 16.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Rounded.AutoAwesome,
-                                                contentDescription = null,
-                                                tint = accentGreen,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                text = "Keşfedilen Vibelar",
-                                                fontSize = 18.sp,
-                                                fontWeight = FontWeight.ExtraBold,
-                                                color = Color.White
-                                            )
-                                        }
-
-                                        FlowRow(
-                                            horizontalArrangement = Arrangement.Center,
-                                            verticalArrangement = Arrangement.spacedBy(10.dp),
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            recognizedLabels.forEach { label ->
-                                                Surface(
-                                                    color = accentGreen.copy(alpha = 0.15f),
-                                                    shape = CircleShape,
-                                                    border = BorderStroke(
-                                                        1.dp,
-                                                        accentGreen.copy(alpha = 0.5f)
-                                                    )
-                                                ) {
-                                                    Text(
-                                                        text = label.uppercase(),
-                                                        modifier = Modifier.padding(
-                                                            horizontal = 16.dp,
-                                                            vertical = 8.dp
-                                                        ),
-                                                        fontSize = 13.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = accentGreen,
-                                                        letterSpacing = 1.sp
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                AnimatedVisibility(visible = !isAnalyzing && recognizedLabels.isEmpty() && selectedBitmap != null) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.ImageSearch,
-                                            contentDescription = null,
-                                            tint = Color.Gray,
-                                            modifier = Modifier.size(40.dp)
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(
-                                            text = "Görselden net bir vibe alamadık.",
-                                            color = Color.LightGray,
-                                            fontWeight = FontWeight.Medium,
-                                            textAlign = TextAlign.Center
-                                        )
-                                    }
+                                if (isAnalyzing) {
+                                    CircularProgressIndicator(color = accentGreen)
+                                    Text("Vibe Analiz Ediliyor...", color = Color.White, modifier = Modifier.padding(top = 8.dp))
+                                } else if (suggestedSong != null) {
+                                    Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = accentGreen)
+                                    Text(
+                                        text = suggestedSong!!,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(top = 12.dp)
+                                    )
                                 }
                             }
                         }
@@ -238,34 +153,15 @@ fun MainScreen(modifier: Modifier = Modifier) {
                             .fillMaxWidth()
                             .height(320.dp)
                             .clip(RoundedCornerShape(24.dp))
-                            .clickable {
-                                photoPickerLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
-                            }
                             .background(cardBackground)
-                            .border(
-                                width = 1.dp,
-                                color = accentGreen.copy(alpha = 0.3f),
-                                shape = RoundedCornerShape(24.dp)
-                            ),
+                            .clickable {
+                                photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Rounded.AddPhotoAlternate,
-                                contentDescription = "Fotoğraf Ekle",
-                                tint = accentGreen.copy(alpha = 0.8f),
-                                modifier = Modifier.size(64.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Vibe'ını analiz etmek için\nbir fotoğraf yükle",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.White.copy(alpha = 0.8f),
-                                textAlign = TextAlign.Center
-                            )
+                            Icon(Icons.Rounded.AddPhotoAlternate, contentDescription = null, tint = accentGreen, modifier = Modifier.size(64.dp))
+                            Text("Vibe'ını yakalamak için fotoğraf yükle", color = Color.Gray)
                         }
                     }
                 }
@@ -275,27 +171,14 @@ fun MainScreen(modifier: Modifier = Modifier) {
 
             Button(
                 onClick = {
-                    photoPickerLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                    )
+                    photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .shadow(16.dp, RoundedCornerShape(20.dp)),
+                modifier = Modifier.fillMaxWidth().height(64.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = accentGreen),
                 shape = RoundedCornerShape(20.dp)
             ) {
-                Text(
-                    text = if (selectedBitmap == null) "GALERİYİ AÇ" else "YENİ FOTOĞRAF SEÇ",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Black,
-                    color = Color.Black,
-                    letterSpacing = 1.5.sp
-                )
+                Text(if (selectedBitmap == null) "GALERİYİ AÇ" else "DEĞİŞTİR", color = Color.Black, fontWeight = FontWeight.Bold)
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -313,7 +196,6 @@ fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
             MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
         }
     } catch (e: Exception) {
-        e.printStackTrace()
         null
     }
 }
