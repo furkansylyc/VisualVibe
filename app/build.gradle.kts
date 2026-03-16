@@ -28,6 +28,7 @@ android {
 
         manifestPlaceholders["redirectHostName"] = "callback"
         manifestPlaceholders["redirectSchemeName"] = "visualvibe"
+        manifestPlaceholders["redirectPathPattern"] = ""
 
         val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
@@ -69,12 +70,12 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    implementation("com.spotify.android:auth:2.1.0")
+    implementation("com.spotify.android:auth:4.0.1")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
-    implementation("com.google.ai.client.generativeai:generativeai:0.7.0")
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

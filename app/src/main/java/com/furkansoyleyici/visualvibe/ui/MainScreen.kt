@@ -88,6 +88,8 @@ fun MainScreen(
                          uiState = VibeUiState.Error("Analiz sırasında bir hata oluştu veya bağlantı kesildi.")
                     }
                 }
+            } else {
+                uiState = VibeUiState.Error("Fotoğraf okunamadı. Lütfen başka bir resim seçin.")
             }
         }
     }
@@ -151,12 +153,19 @@ fun MainScreen(
                                     is VibeUiState.Success -> {
                                         Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = accentGreen)
                                         Text(
-                                            text = state.suggestedSong,
-                                            fontSize = 18.sp,
+                                            text = state.result.suggestedSong,
+                                            fontSize = 20.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color.White,
                                             textAlign = TextAlign.Center,
                                             modifier = Modifier.padding(top = 12.dp)
+                                        )
+                                        Text(
+                                            text = state.result.explanation,
+                                            fontSize = 14.sp,
+                                            color = Color.LightGray,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                                         )
                                     }
                                     is VibeUiState.Error -> {

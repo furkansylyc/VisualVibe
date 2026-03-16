@@ -27,12 +27,18 @@ class SpotifyManager(private val activity: Activity) {
     }
 
     fun handleLoginResponse(resultCode: Int, intent: Intent?): String? {
-        val response = AuthorizationClient.getResponse(resultCode, intent)
+        if (intent == null) return null
 
-        return when (response.type) {
-            AuthorizationResponse.Type.TOKEN -> response.accessToken
-            AuthorizationResponse.Type.ERROR -> null
-            else -> null
+        return try {
+            val response = AuthorizationClient.getResponse(resultCode, intent)
+            when (response.type) {
+                AuthorizationResponse.Type.TOKEN -> response.accessToken
+                AuthorizationResponse.Type.ERROR -> null
+                else -> null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 
