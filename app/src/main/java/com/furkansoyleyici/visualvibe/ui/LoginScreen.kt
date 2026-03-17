@@ -3,18 +3,19 @@ package com.furkansoyleyici.visualvibe.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.furkansoyleyici.visualvibe.R
+
 
 @Composable
 fun LoginScreen(
@@ -70,7 +71,12 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Text("BAĞLANIYOR...", color = Color.Black, fontWeight = FontWeight.Bold)
                 } else {
-                    Icon(Icons.Rounded.MusicNote, contentDescription = null, tint = Color.Black)
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_spotify),
+                        contentDescription = "Spotify Logo",
+                        tint = Color.Black,
+                        modifier = Modifier.size(24.dp)
+                    )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text("SPOTIFY ILE GİRİŞ YAP", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }

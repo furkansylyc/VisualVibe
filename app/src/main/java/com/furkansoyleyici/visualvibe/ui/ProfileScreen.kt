@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -25,7 +27,8 @@ import org.json.JSONObject
 fun ProfileScreen(
     modifier: Modifier = Modifier,
     userProfileJson: String?,
-    topArtistsJson: String?
+    topArtistsJson: String?,
+    onLogoutClick: () -> Unit
 ) {
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(Color(0xFF0A1A12), Color(0xFF050505))
@@ -89,14 +92,32 @@ fun ProfileScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Profilim",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.White,
-                letterSpacing = 1.sp,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Profilim",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                    letterSpacing = 1.sp
+                )
+
+                IconButton(
+                    onClick = onLogoutClick,
+                    modifier = Modifier.background(Color(0xFFE57373).copy(alpha = 0.2f), shape = CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Logout,
+                        contentDescription = "Çıkış Yap",
+                        tint = Color(0xFFE57373)
+                    )
+                }
+            }
 
             // User Info Card
             Surface(

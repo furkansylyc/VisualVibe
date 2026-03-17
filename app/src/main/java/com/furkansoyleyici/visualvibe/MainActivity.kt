@@ -117,7 +117,13 @@ class MainActivity : ComponentActivity() {
                             com.furkansoyleyici.visualvibe.ui.ProfileScreen(
                                 modifier = Modifier.padding(innerPadding),
                                 userProfileJson = spotifyProfile,
-                                topArtistsJson = spotifyData
+                                topArtistsJson = spotifyData,
+                                onLogoutClick = {
+                                    secureStorage.clearToken()
+                                    spotifyData = null
+                                    spotifyProfile = null
+                                    currentTab = "home"
+                                }
                             )
                         }
                     } else {
