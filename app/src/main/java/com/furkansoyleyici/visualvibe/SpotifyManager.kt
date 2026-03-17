@@ -20,7 +20,7 @@ class SpotifyManager(private val activity: Activity) {
             redirectUri
         )
 
-        builder.setScopes(arrayOf("user-top-read"))
+        builder.setScopes(arrayOf("user-top-read", "user-read-private", "user-read-email"))
         val request = builder.build()
 
         return AuthorizationClient.createLoginActivityIntent(activity, request)
@@ -45,6 +45,31 @@ class SpotifyManager(private val activity: Activity) {
     fun fetchUserTopArtists(token: String, callback: (String?) -> Unit) {
         val client = OkHttpClient()
         val url = "https://api.spotify.com/v1/me/top/artists?time_range=long_term&limit=50"
+
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Authorization", "Bearer $token")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback(null)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val jsonBody = response.body?.string()
+                    callback(jsonBody)
+                } else {
+                    callback(null)
+                }
+            }
+        })
+    }
+
+    fun fetchUserProfile(token: String, callback: (String?) -> Unit) {
+        val client = OkHttpClient()
+        val url = "https://api.spotify.com/v1/me"
 
         val request = Request.Builder()
             .url(url)

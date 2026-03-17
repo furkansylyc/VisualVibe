@@ -14,6 +14,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
@@ -105,18 +107,24 @@ fun MainScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(
-                text = "VisualVibe",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.White,
-                letterSpacing = 2.sp,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
+            val scrollState = rememberScrollState()
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "VisualVibe",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                    letterSpacing = 2.sp,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
 
-
-
-            AnimatedContent(
+                AnimatedContent(
                 targetState = selectedBitmap != null,
                 label = "ImageState"
             ) { hasImage ->
@@ -200,9 +208,10 @@ fun MainScreen(
                         }
                     }
                 }
-            }
+            } // End of AnimatedContent
+            } // End of scrollable Column
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
